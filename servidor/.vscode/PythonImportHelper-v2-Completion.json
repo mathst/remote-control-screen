@@ -1,0 +1,308 @@
+[
+    {
+        "label": "socket",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "socket",
+        "description": "socket",
+        "detail": "socket",
+        "documentation": {}
+    },
+    {
+        "label": "threading",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "threading",
+        "description": "threading",
+        "detail": "threading",
+        "documentation": {}
+    },
+    {
+        "label": "struct",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "struct",
+        "description": "struct",
+        "detail": "struct",
+        "documentation": {}
+    },
+    {
+        "label": "pickle",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pickle",
+        "description": "pickle",
+        "detail": "pickle",
+        "documentation": {}
+    },
+    {
+        "label": "zlib",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "zlib",
+        "description": "zlib",
+        "detail": "zlib",
+        "documentation": {}
+    },
+    {
+        "label": "cv2",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "cv2",
+        "description": "cv2",
+        "detail": "cv2",
+        "documentation": {}
+    },
+    {
+        "label": "pyautogui",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pyautogui",
+        "description": "pyautogui",
+        "detail": "pyautogui",
+        "documentation": {}
+    },
+    {
+        "label": "numpy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "numpy",
+        "description": "numpy",
+        "detail": "numpy",
+        "documentation": {}
+    },
+    {
+        "label": "Button",
+        "importPath": "pynput.mouse",
+        "description": "pynput.mouse",
+        "isExtraImport": true,
+        "detail": "pynput.mouse",
+        "documentation": {}
+    },
+    {
+        "label": "Controller",
+        "importPath": "pynput.mouse",
+        "description": "pynput.mouse",
+        "isExtraImport": true,
+        "detail": "pynput.mouse",
+        "documentation": {}
+    },
+    {
+        "label": "Button",
+        "importPath": "pynput.mouse",
+        "description": "pynput.mouse",
+        "isExtraImport": true,
+        "detail": "pynput.mouse",
+        "documentation": {}
+    },
+    {
+        "label": "Controller",
+        "importPath": "pynput.mouse",
+        "description": "pynput.mouse",
+        "isExtraImport": true,
+        "detail": "pynput.mouse",
+        "documentation": {}
+    },
+    {
+        "label": "Key",
+        "importPath": "pynput.keyboard",
+        "description": "pynput.keyboard",
+        "isExtraImport": true,
+        "detail": "pynput.keyboard",
+        "documentation": {}
+    },
+    {
+        "label": "Controller",
+        "importPath": "pynput.keyboard",
+        "description": "pynput.keyboard",
+        "isExtraImport": true,
+        "detail": "pynput.keyboard",
+        "documentation": {}
+    },
+    {
+        "label": "Key",
+        "importPath": "pynput.keyboard",
+        "description": "pynput.keyboard",
+        "isExtraImport": true,
+        "detail": "pynput.keyboard",
+        "documentation": {}
+    },
+    {
+        "label": "Controller",
+        "importPath": "pynput.keyboard",
+        "description": "pynput.keyboard",
+        "isExtraImport": true,
+        "detail": "pynput.keyboard",
+        "documentation": {}
+    },
+    {
+        "label": "json",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "json",
+        "description": "json",
+        "detail": "json",
+        "documentation": {}
+    },
+    {
+        "label": "time",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "time",
+        "description": "time",
+        "detail": "time",
+        "documentation": {}
+    },
+    {
+        "label": "mss",
+        "importPath": "mss",
+        "description": "mss",
+        "isExtraImport": true,
+        "detail": "mss",
+        "documentation": {}
+    },
+    {
+        "label": "lz4.frame",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "lz4.frame",
+        "description": "lz4.frame",
+        "detail": "lz4.frame",
+        "documentation": {}
+    },
+    {
+        "label": "Server",
+        "kind": 6,
+        "importPath": "serv",
+        "description": "serv",
+        "peekOfCode": "class Server:\n    def __init__(self):\n        self.screen_socket = None\n        self.command_socket = None\n    def start(self):\n        # Cria o socket para compartilhamento de tela\n        self.screen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)\n        self.screen_socket.bind((SERVER_HOST, SCREEN_PORT))\n        self.screen_socket.listen(1)\n        print(SERVER_HOST,SCREEN_PORT)",
+        "detail": "serv",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "serv",
+        "description": "serv",
+        "peekOfCode": "def main():\n    server = Server()\n    server.start()\nif __name__ == \"__main__\":\n    main()",
+        "detail": "serv",
+        "documentation": {}
+    },
+    {
+        "label": "mouse",
+        "kind": 5,
+        "importPath": "serv",
+        "description": "serv",
+        "peekOfCode": "mouse = Controller()\nkeyboard = KeyboardController()\n# Configurações do servidor\nSERVER_HOST = '10.200.0.17'\nSCREEN_PORT = 3080\nCOMMAND_PORT = 3081\nclass Server:\n    def __init__(self):\n        self.screen_socket = None\n        self.command_socket = None",
+        "detail": "serv",
+        "documentation": {}
+    },
+    {
+        "label": "keyboard",
+        "kind": 5,
+        "importPath": "serv",
+        "description": "serv",
+        "peekOfCode": "keyboard = KeyboardController()\n# Configurações do servidor\nSERVER_HOST = '10.200.0.17'\nSCREEN_PORT = 3080\nCOMMAND_PORT = 3081\nclass Server:\n    def __init__(self):\n        self.screen_socket = None\n        self.command_socket = None\n    def start(self):",
+        "detail": "serv",
+        "documentation": {}
+    },
+    {
+        "label": "SERVER_HOST",
+        "kind": 5,
+        "importPath": "serv",
+        "description": "serv",
+        "peekOfCode": "SERVER_HOST = '10.200.0.17'\nSCREEN_PORT = 3080\nCOMMAND_PORT = 3081\nclass Server:\n    def __init__(self):\n        self.screen_socket = None\n        self.command_socket = None\n    def start(self):\n        # Cria o socket para compartilhamento de tela\n        self.screen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)",
+        "detail": "serv",
+        "documentation": {}
+    },
+    {
+        "label": "SCREEN_PORT",
+        "kind": 5,
+        "importPath": "serv",
+        "description": "serv",
+        "peekOfCode": "SCREEN_PORT = 3080\nCOMMAND_PORT = 3081\nclass Server:\n    def __init__(self):\n        self.screen_socket = None\n        self.command_socket = None\n    def start(self):\n        # Cria o socket para compartilhamento de tela\n        self.screen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)\n        self.screen_socket.bind((SERVER_HOST, SCREEN_PORT))",
+        "detail": "serv",
+        "documentation": {}
+    },
+    {
+        "label": "COMMAND_PORT",
+        "kind": 5,
+        "importPath": "serv",
+        "description": "serv",
+        "peekOfCode": "COMMAND_PORT = 3081\nclass Server:\n    def __init__(self):\n        self.screen_socket = None\n        self.command_socket = None\n    def start(self):\n        # Cria o socket para compartilhamento de tela\n        self.screen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)\n        self.screen_socket.bind((SERVER_HOST, SCREEN_PORT))\n        self.screen_socket.listen(1)",
+        "detail": "serv",
+        "documentation": {}
+    },
+    {
+        "label": "MouseEventHandling:#ETIQUET",
+        "kind": 6,
+        "importPath": "server",
+        "description": "server",
+        "peekOfCode": "class MouseEventHandling:#ETIQUETA DE ALGO QUE VIA SER USADO\n    def __init__(self, command):\n        self.command=command\n        self.mouse_position=(0,0)\n        print(command)\n        self.button = command['button']\n    def on_move(self):\n        x = self.command['x']\n        y = self.command['y']\n        self.mouse_position = MouseController.position",
+        "detail": "server",
+        "documentation": {}
+    },
+    {
+        "label": "KeyboardEventHandling",
+        "kind": 6,
+        "importPath": "server",
+        "description": "server",
+        "peekOfCode": "class KeyboardEventHandling:\n    def __init__(self, command):\n        self.details = command['details']\n        self.key = self.details['key']\n    def on_press(self):\n        key = self.key\n        if self.key.startswith(\"Key.\"):\n            key = self.key.split(\".\")[1]  # Extrai o nome da tecla\n            key = getattr(Key, key)    \n        keyboard_c.press(key)  # Pressiona a tecla",
+        "detail": "server",
+        "documentation": {}
+    },
+    {
+        "label": "Server",
+        "kind": 6,
+        "importPath": "server",
+        "description": "server",
+        "peekOfCode": "class Server:\n    def __init__(self):\n        self.command_socket = None\n        self.screen_socket = None\n        self.running = True\n        self.mouse_event_handling = MouseEventHandling\n        self.keyboard_event_handling = KeyboardEventHandling\n    @property\n    def mouse_position(self):\n        # Retorna a posição atual do mouse como uma tupla",
+        "detail": "server",
+        "documentation": {}
+    },
+    {
+        "label": "mouse_c",
+        "kind": 5,
+        "importPath": "server",
+        "description": "server",
+        "peekOfCode": "mouse_c = MouseController()\nkeyboard_c = KeyboardController()\nSERVER_HOST = '10.200.0.17'\nCOMMAND_PORT = 3081\nSCREEN_PORT = 3080\nscreen_width, screen_height = pyautogui.size()\nclass MouseEventHandling:#ETIQUETA DE ALGO QUE VIA SER USADO\n    def __init__(self, command):\n        self.command=command\n        self.mouse_position=(0,0)",
+        "detail": "server",
+        "documentation": {}
+    },
+    {
+        "label": "keyboard_c",
+        "kind": 5,
+        "importPath": "server",
+        "description": "server",
+        "peekOfCode": "keyboard_c = KeyboardController()\nSERVER_HOST = '10.200.0.17'\nCOMMAND_PORT = 3081\nSCREEN_PORT = 3080\nscreen_width, screen_height = pyautogui.size()\nclass MouseEventHandling:#ETIQUETA DE ALGO QUE VIA SER USADO\n    def __init__(self, command):\n        self.command=command\n        self.mouse_position=(0,0)\n        print(command)",
+        "detail": "server",
+        "documentation": {}
+    },
+    {
+        "label": "SERVER_HOST",
+        "kind": 5,
+        "importPath": "server",
+        "description": "server",
+        "peekOfCode": "SERVER_HOST = '10.200.0.17'\nCOMMAND_PORT = 3081\nSCREEN_PORT = 3080\nscreen_width, screen_height = pyautogui.size()\nclass MouseEventHandling:#ETIQUETA DE ALGO QUE VIA SER USADO\n    def __init__(self, command):\n        self.command=command\n        self.mouse_position=(0,0)\n        print(command)\n        self.button = command['button']",
+        "detail": "server",
+        "documentation": {}
+    },
+    {
+        "label": "COMMAND_PORT",
+        "kind": 5,
+        "importPath": "server",
+        "description": "server",
+        "peekOfCode": "COMMAND_PORT = 3081\nSCREEN_PORT = 3080\nscreen_width, screen_height = pyautogui.size()\nclass MouseEventHandling:#ETIQUETA DE ALGO QUE VIA SER USADO\n    def __init__(self, command):\n        self.command=command\n        self.mouse_position=(0,0)\n        print(command)\n        self.button = command['button']\n    def on_move(self):",
+        "detail": "server",
+        "documentation": {}
+    },
+    {
+        "label": "SCREEN_PORT",
+        "kind": 5,
+        "importPath": "server",
+        "description": "server",
+        "peekOfCode": "SCREEN_PORT = 3080\nscreen_width, screen_height = pyautogui.size()\nclass MouseEventHandling:#ETIQUETA DE ALGO QUE VIA SER USADO\n    def __init__(self, command):\n        self.command=command\n        self.mouse_position=(0,0)\n        print(command)\n        self.button = command['button']\n    def on_move(self):\n        x = self.command['x']",
+        "detail": "server",
+        "documentation": {}
+    }
+]
