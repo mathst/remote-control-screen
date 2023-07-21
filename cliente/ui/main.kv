@@ -1,0 +1,49 @@
+
+<MainWindow>:
+    BoxLayout:
+        orientation: 'vertical'
+
+        Image:
+            source: 'top_background_image.png'
+        
+        Image:
+            source: 'logo_image.png'
+
+        Label:
+            text: 'Title 1'
+        
+        Label:
+            text: 'Title 2'
+
+        BoxLayout:
+            orientation: 'vertical'
+            GroupBox:
+                Label:
+                    text: 'Your ID:'
+                TextInput:
+                    id: your_id_edit
+                    multiline: False
+
+                Label:
+                    text: 'Your Password:'
+                TextInput:
+                    id: your_password_edit
+                    multiline: False
+
+                Label:
+                    text: 'Target ID:'
+                TextInput:
+                    id: target_id_edit
+                    multiline: False
+
+            Button:
+                text: 'Connect'
+                on_release: root.connect_button_click()
+        
+        Image:
+            id: status_image
+            source: 'status_disconnected.png'
+
+        Label:
+            id: status_label
+            text: 'Disconnected'

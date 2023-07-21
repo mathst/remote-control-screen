@@ -1,246 +1,321 @@
-import socket
-import cv2
 import zlib
-import io
-import os
-import time
-import threading
-from PIL import Image, ImageGrab
-import numpy as np
-from pynput.mouse import Button, Controller
-from pynput.keyboard import Controller as ConK, Key
-
-keyboard = ConK()
-mouse = Controller()
-
-prev_img = None
-
-class Client:
-    def __init__(self, host, port_img, port_mouse, port_keyboard):
-        self.host = host
-        self.port_img = port_img
-        self.port_mouse = port_mouse
-        self.port_keyboard = port_keyboard
-
-    def start(self):
-        # Inicializando a conexão de imagem
-        self.img_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.img_sock.connect((self.host, self.port_img))
-
-        # Enviando as portas de mouse e teclado para o servidor
-        self.img_sock.sendall(f'{self.port_mouse},{self.port_keyboard}'.encode())
-
-        # Inicializando as conexões de mouse e teclado
-        self.mouse_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.keyboard_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        self.mouse_sock.bind((self.host, self.port_mouse))
-        self.keyboard_sock.bind((self.host, self.port_keyboard))
-
-        self.mouse_sock.listen(1)
-        self.keyboard_sock.listen(1)
-
-        conn_mouse, _ = self.mouse_sock.accept()
-        conn_keyboard, _ = self.keyboard_sock.accept()
-
-        print('Conexões de mouse e teclado estabelecidas')
-
-        threads = []
-        threads.append(threading.Thread(target=self.send_screenshot, args=(self.img_sock,)))
-        threads.append(threading.Thread(target=self.process_touch_event, args=(conn_mouse,)))
-        threads.append(threading.Thread(target=self.process_key_event, args=(conn_keyboard,)))
-
-        for thread in threads:
-            thread.start()
-
-    def send_screenshot(self, sock):
-        global prev_img
-        while True:
-            # Captura a tela
-            img = ImageGrab.grab().convert('L')  # Captura em grayscale
-
-            # Se há uma imagem anterior, encontra a diferença
-            if prev_img is not None:
-                diff_img = cv2.absdiff(np.array(prev_img), np.array(img))
-
-                # Ignora diferenças pequenas (menos que 30)
-                _, diff_img = cv2.threshold(diff_img, 30, 255, cv2.THRESH_BINARY)
-
-                img = Image.fromarray(diff_img)
-
-            prev_img = img
-
-            # Comprime a imagem
-            img_byte_arr = io.BytesIO()
-            img.save(img_byte_arr, format='PNG')
-            img_byte_arr = img_byte_arr.getvalue()
-            compressed_img = zlib.compress(img_byte_arr)
-
-            # Envia o tipo de mensagem antes dos dados
-            sock.sendall(b'image')  # Tipo de mensagem
-            sock.sendall(len(compressed_img).to_bytes(4, 'big'))  # Tamanho da imagem
-            sock.sendall(compressed_img)  # Dados da imagem
-
-    def process_touch_event(self, sock):
-        while True:
-            # Recebe o evento de toque
-            touch_event = sock.recv(1024).decode()
-
-            # Separa o tipo de evento e a posição
-            event_type, pos_str = touch_event.split(':')
-            pos = tuple(map(int, pos_str.strip('()').split(',')))
-
-            # Realiza a ação correspondente ao evento de toque
-            if event_type == 'touch_down' or event_type == 'touch_move':
-                mouse.position = pos
-            elif event_type == 'touch_up':
-                pass  # Para este exemplo, não fazemos nada no evento touch_up
-
-    def process_key_event(self, sock):
-        while True:
-            # Recebe o evento de teclado
-            key_event = sock.recv(1024).decode()
-
-            # Separa o tipo de evento e a tecla
-            event_type, key_str = key_event.split(':')
-
-            # Traduz algumas teclas especiais
-            if key_str in ('shift', 'ctrl', 'alt'):
-                key_str = f'Key.{key_str}'
-            key = eval(f'Key.{key_str}', {'Key': Key})
-
-            # Realiza a ação correspondente ao evento de teclado
-            if event_type == 'key_down':
-                keyboard.press(key)
-            elif event_type == 'key_up':
-                keyboard.release(key)
-
-if __name__ == "__main__":
-    client = Client('10.200.0.18', 8080, 8081, 8082)
-    client.start()
-
-
-server:
-
-
-
-import socket
-import threading
-import zlib
-import io
-
-from pynput.mouse import Button, Controller
-from pynput.keyboard import Controller as ConK, Key
-
-from PIL import Image
-
-from kivy.core.window import Window
 from kivy.app import App
-from kivy.uix.widget import Widget
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.image import Image
+from kivy.uix.label import Label
+from kivy.uix.textinput import TextInput
+from kivy.uix.button import Button
+# from kivy.uix.maskedinput import MaskedTextInput
+from kivy.uix.behaviors import ButtonBehavior
+from kivy.clock import Clock
+from kivy.core.window import Window
+from kivy.graphics.texture import Texture
+import socket
+import threading
+import time
+import os
 
-from threading import Thread
 
-keyboard = ConK()
-mouse = Controller()
+class MainWindow(BoxLayout):
+    def __init__(self, **kwargs):
+        super(MainWindow, self).__init__(**kwargs)
+        self.host = '192.168.1.100'  # Insira o endereço do servidor aqui
+        self.port = 3398  # Insira a porta do servidor aqui
+        self.main_socket = None
+        self.my_id = ''
+        self.connected = False
+        self.status_image = Image(source='disconnected_icon.png')
+        self.status_label = Label(text='Disconnected')
+        self.ids_layout = BoxLayout(orientation='horizontal')
+        self.ids_layout.add_widget(Label(text='Target ID:'))
+        self.ids.target_id_input = TextInput(multiline=False)
+        self.ids.connect_button = Button(text='Connect', on_press=self.connect)
+        self.ids_layout.add_widget(self.ids.target_id_input)
+        self.ids_layout.add_widget(self.ids.connect_button)
+        self.add_widget(self.ids_layout)
+        self.add_widget(self.status_image)
+        self.add_widget(self.status_label)
 
+    def connect(self, *args):
+        target_id = self.ids.target_id_input.text.strip()
+        if target_id and target_id != '   -   -   ':
+            if target_id == self.my_id:
+                print("You cannot connect with yourself!")
+                return
+            try:
+                self.main_socket = socket()
+                self.main_socket.connect((self.host, self.port))
+                self.connected = True
+                self.main_socket.sendall(target_id.encode('utf-8'))
+                self.ids.target_id_input.disabled = True
+                self.ids.connect_button.disabled = True
+                self.status_image.source = 'connected_icon.png'
+                self.status_label.text = 'Finding the ID...'
+            except Exception as e:
+                print("Error connecting to the server:", e)
 
-# Endereço e porta do servidor
-SERVER_HOST = '10.200.0.18'
-SERVER_PORT = 8080
+    def on_connected(self, *args):
+        self.main_socket.sendall(self.my_id.encode('utf-8'))
 
-class MyWidget(Widget):
-    def __init__(self, sock, **kwargs):
-        super(MyWidget, self).__init__(**kwargs)
-        self.sock = sock
-        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
-        self._keyboard.bind(on_key_down=self._on_key_down)
-        self._keyboard.bind(on_key_up=self._on_key_up)
+    def on_disconnected(self, *args):
+        self.connected = False
+        self.ids.target_id_input.disabled = False
+        self.ids.connect_button.disabled = False
+        self.status_image.source = 'disconnected_icon.png'
+        self.status_label.text = 'Disconnected from the server!'
+
+    def on_socket_error(self, *args):
+        pass
+
+    def start_desktop_socket(self):
+        self.desktop_socket = socket()
+        try:
+            self.desktop_socket.connect((self.host, self.port))
+            self.desktop_socket.sendall(self.my_id.encode('utf-8'))
+            desktop_thread = threading.Thread(target=self.desktop_socket_thread)
+            desktop_thread.daemon = True
+            desktop_thread.start()
+        except Exception as e:
+            print("Error connecting to desktop socket:", e)
+
+    def desktop_socket_thread(self):
+        while self.connected:
+            try:
+                data = self.desktop_socket.recv(1024)
+                if not data:
+                    break
+                # Implementar lógica para processar os dados recebidos do socket de desktop
+            except Exception as e:
+                print("Error receiving data from desktop socket:", e)
+                break
+            
+    def start_keyboard_socket(self):
+        self.keyboard_socket = socket()
+        try:
+            self.keyboard_socket.connect((self.host, self.port))
+            self.keyboard_socket.sendall(self.my_id.encode('utf-8'))
+            keyboard_thread = threading.Thread(target=self.keyboard_socket_thread)
+            keyboard_thread.daemon = True
+            keyboard_thread.start()
+        except Exception as e:
+            print("Error connecting to keyboard socket:", e)
+
+    def keyboard_socket_thread(self):
+        while self.connected:
+            try:
+                data = self.keyboard_socket.recv(1024)
+                if not data:
+                    break
+                # Implementar lógica para processar os dados recebidos do socket de teclado
+            except Exception as e:
+                print("Error receiving data from keyboard socket:", e)
+                break
+
+    def start_files_socket(self):
+        self.files_socket = socket()
+        try:
+            self.files_socket.connect((self.host, self.port))
+            self.files_socket.sendall(self.my_id.encode('utf-8'))
+            files_thread = threading.Thread(target=self.files_socket_thread)
+            files_thread.daemon = True
+            files_thread.start()
+        except Exception as e:
+            print("Error connecting to files socket:", e)
+
+    def files_socket_thread(self):
+        while self.connected:
+            try:
+                data = self.files_socket.recv(1024)
+                if not data:
+                    break
+                # Implementar lógica para processar os dados recebidos do socket de arquivos
+            except Exception as e:
+                print("Error receiving data from files socket:", e)
+                break
+
+class RemoteScreen(BoxLayout):
+    def clear_connection(self):
+        # Defina a lógica para limpar a conexão (frm_RemoteScreen)
+        self.ids.mouse_icon_image.source = 'mouse_icon_unchecked.png'
+        self.ids.keyboard_icon_image.source = 'keyboard_icon_unchecked.png'
+        self.ids.resize_icon_image.source = 'resize_icon_checked.png'
+
+        self.ids.mouse_remote_checkbox.active = False
+        self.ids.keyboard_remote_checkbox.active = False
+        self.ids.resize_checkbox.active = True
+        # ... Outras atualizações de widgets necessárias ...
+
+class ShareFilesScreen(BoxLayout):
+    def clear_connection(self):
+        # Defina a lógica para limpar a conexão (frm_ShareFiles)
+        self.ids.download_bitbtn.disabled = False
+        self.ids.upload_bitbtn.disabled = False
+        self.ids.download_progressbar.value = 0
+        self.ids.upload_progressbar.value = 0
+        self.ids.size_download_label.text = 'Size: 0 B / 0 B'
+        self.ids.size_upload_label.text = 'Size: 0 B / 0 B'
+        # ... Outras atualizações de widgets necessárias ...
+
+class ChatScreen(BoxLayout):
+    def clear_connection(self):
+        # Defina a lógica para limpar a conexão (frm_Chat)
+        self.width = 230
+        self.height = 340
+        self.x = Window.width - self.width
+        self.y = Window.height - self.height
+        self.ids.chat_richedit.text = ''
+        self.ids.your_text_edit.text = ''
+        self.ids.chat_richedit.text += 'AllaKore Remote - Chat\n\n'
+        self.ids.chat_richedit.text += 'Other initializations...'
+        # ... Outras atualizações de widgets necessárias ...
+
+class TargetIDScreen(BoxLayout):
+    def connect_button_clicked(self):
+        # Implemente a lógica para tratar o clique no botão "Connect"
+        target_id = self.ids.target_id_maskedit.text
+        # Implemente a lógica para lidar com a conexão ao ID de destino
+        # ...
+
+        # Após a conexão, atualize as outras telas usando os identificadores
+        self.ids.remote_screen.clear_connection()
+        self.ids.share_files_screen.clear_connection()
+        self.ids.chat_screen.clear_connection()
+
+class CustomImageButton(ButtonBehavior, Image):
+    pass
+
+class CentralConnection:
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+        self.socket = None
+        self.connected = False
+
+    def connect(self):
+        try:
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.connect((self.host, self.port))
+            self.connected = True
+            return True
+        except Exception as e:
+            print("Error connecting to the server:", e)
+            self.connected = False
+            return False
+
+    def receive_data(self):
+        try:
+            if self.connected:
+                data = self.socket.recv(1024).decode('utf-8')
+                if not data:
+                    self.connected = False
+                return data
+            else:
+                return None
+        except Exception as e:
+            print("Error receiving data:", e)
+            self.connected = False
+            return None
+
+    def send_data(self, data):
+        try:
+            if self.connected:
+                self.socket.sendall(data.encode('utf-8'))
+            else:
+                print("Not connected to the server.")
+        except Exception as e:
+            print("Error sending data:", e)
+            self.connected = False
+
+    def execute(self):
+        while self.connected:
+            time.sleep(0.05)  # Avoid using 100% CPU
+            data = self.receive_data()
+            if data:
+                # Process the received data and take actions accordingly
+                self.process_data(data)
+
+class Tfrm_Main(BoxLayout):
+    def __init__(self, **kwargs):
+        super(Tfrm_Main, self).__init__(**kwargs)
+
+        # ... Rest of the UI setup ...
+
+        # Create the CentralConnection instance
+        self.central_connection = CentralConnection('api.sdremoto.com.br', 6651)
+        self.central_connection.connect()
+
+    def on_keyboard_down(self, keycode, scancode, text, modifiers):
+        # Handle keyboard down event
+        # Convert the input data to bytes and send it via CentralConnection
+        data = f'<|KEYBOARD_DOWN|>{keycode[0]}<|>{scancode}<|>{text}<|>{modifiers}<|>'
+        self.central_connection.send_data(data)
+
+    def on_keyboard_up(self, keycode):
+        # Handle keyboard up event
+        # Convert the input data to bytes and send it via CentralConnection
+        data = f'<|KEYBOARD_UP|>{keycode[0]}<|>'
+        self.central_connection.send_data(data)
 
     def on_touch_down(self, touch):
-        print(touch)
-        self.sock.sendall(f"touch_down:{touch.pos}".encode())
-
-    def on_touch_move(self, touch):
-        print(touch)
-        self.sock.sendall(f"touch_move:{touch.pos}".encode())
+        # Handle mouse click event
+        # Convert the input data to bytes and send it via CentralConnection
+        data = f'<|MOUSE_CLICK|>{touch.x}<|>{touch.y}<|>'
+        self.central_connection.send_data(data)
 
     def on_touch_up(self, touch):
-        print(touch)
-        self.sock.sendall(f"touch_up:{touch.pos}".encode())
-    
-    def _keyboard_closed(self):
-        self._keyboard.unbind(on_key_down=self._on_key_down)
-        self._keyboard.unbind(on_key_up=self._on_key_up)
-        self._keyboard = None
+        # Handle mouse release event
+        # Convert the input data to bytes and send it via CentralConnection
+        data = f'<|MOUSE_RELEASE|>{touch.x}<|>{touch.y}<|>'
+        self.central_connection.send_data(data)
 
-    def _on_key_down(self, keyboard, keycode, text, modifiers):
-        print(keycode, text, modifiers)
-        self.sock.sendall(f"key_down:{keycode[1]}".encode())
+    # Add other methods to handle mouse move, file transfer, clipboard, etc.
 
-    def _on_key_up(self, keyboard, keycode):
-        print(keycode)
-        self.sock.sendall(f"key_up:{keycode[1]}".encode())
-               
-class Server:
-    def __init__(self, host, port_img):
-        self.host = host
-        self.port_img = port_img
+    def update(self, dt):
+        # Periodically check for received data from the server
+        data = self.central_connection.receive_data()
+        if data:
+            self.central_connection.process_data(data)
 
-    def start(self):
+    def on_close(self):
+        # Close the central connection when the app is closed
+        pass
+
+class App(App):
+    def build(self):
+        frm_main = Tfrm_Main()
+        # Bind keyboard and mouse events to the Tfrm_Main instance
+        Window.bind(on_keyboard=frm_main.on_keyboard_down, on_keyboard_up=frm_main.on_keyboard_up,
+                    on_touch_down=frm_main.on_touch_down, on_touch_up=frm_main.on_touch_up)
+        # Schedule the update method to run periodically
+        Clock.schedule_interval(frm_main.update, 0.1)
+        return frm_main
+
+    def compress_stream_with_zlib(src_stream):
         try:
-            # print('Iniciando servidor...')
-            # Inicializando a conexão de imagem
-            self.img_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.img_sock.connect((self.host, self.port_img))
-            # Recebendo as portas de mouse e teclado do cliente
-            print('Conexão de imagem estabelecida')
-            try:
-                ports = self.img_sock.recv(1024).decode()
-                print(ports)
-                port_mouse, port_keyboard = map(int, ports.split(','))
-            except Exception as e:
-                print('error ao enviar as portas: ',e)
-                return
+            in_data = src_stream.getvalue()
+            compressed_data = zlib.compress(in_data, level=zlib.Z_DEFAULT_COMPRESSION)
+            src_stream.seek(0)
+            src_stream.truncate(0)
+            src_stream.write(compressed_data)
+            return True
         except Exception as e:
-            print('error: ',e)
-            return
-        
-        # Inicializando as conexões de mouse e teclado
-        self.mouse_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.keyboard_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            print("Error compressing stream:", e)
+            return False
 
-        self.mouse_sock.connect((self.host, port_mouse))
-        self.keyboard_sock.connect((self.host, port_keyboard))
+    def decompress_stream_with_zlib(src_stream):
+        try:
+            in_data = src_stream.getvalue()
+            decompressed_data = zlib.decompress(in_data)
+            src_stream.seek(0)
+            src_stream.truncate(0)
+            src_stream.write(decompressed_data)
+            return True
+        except Exception as e:
+            print("Error decompressing stream:", e)
+            return False
 
-        print('Conexões de mouse e teclado estabelecidas')
-
-        threading.Thread(target=self.receive_image, args=(self.img_sock,)).start()
-        threading.Thread(target=self.send_touch_events, args=(self.mouse_sock,)).start()
-        threading.Thread(target=self.send_key_events, args=(self.keyboard_sock,)).start()
-
-    def receive_image(self, sock):
-        while True:
-            data_type = sock.recv(5)  # Tipo de dados
-            if data_type == b'image':
-                img_len = int.from_bytes(sock.recv(4), 'big')  # Tamanho da imagem
-                compressed_img = sock.recv(img_len)  # Dados da imagem
-
-                # Descomprime a imagem
-                img_byte_arr = io.BytesIO(zlib.decompress(compressed_img))
-                img = Image.open(img_byte_arr)
-                # Display image (you might need to update this part to fit your context)
-                img.show()
-
-    def send_touch_events(self, sock):
-        self.app = App.get_running_app()
-        self.app.root = MyWidget(sock)
-        self.app.run()
-
-    def send_key_events(self, sock):
-        self.app = App.get_running_app()
-        self.app.root = MyWidget(sock)
-        self.app.run()
-
-if __name__ == "__main__":
-    server = Server(SERVER_HOST, SERVER_PORT)
-    server.start()
+    def memory_stream_to_string(memory_stream):
+        return memory_stream.getvalue().decode('utf-8')
+    
+if __name__ == '__main__':
+    App().run()
