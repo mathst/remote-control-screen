@@ -280,8 +280,89 @@ class Server:
                 time.sleep(0.005)# evita que o loop consuma todos os recursos do CPU
                 
         conn.close()
+# import random
+# import socket
+# import threading
 
+# class ClientConnection:
+#     def __init__(self, client_socket, client_id):
+#         self.socket = client_socket
+#         self.id = client_id
+#         self.is_connected = True
+
+# class Server:
+#     def __init__(self, host, port):
+#         self.host = host
+#         self.port = port
+#         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#         self.clients = {}
+
+#     def start(self):
+#         self.server_socket.bind((self.host, self.port))
+#         self.server_socket.listen(5)
+#         print("Servidor em execução...")
+
+#         while True:
+#             client_socket, client_address = self.server_socket.accept()
+#             client_id = self.generate_client_id()
+#             client_connection = ClientConnection(client_socket, client_id)
+
+#             self.clients[client_id] = client_connection
+
+#             client_thread = threading.Thread(target=self.handle_client, args=(client_connection,))
+#             client_thread.start()
+
+#     def handle_client(self, client):
+#         while client.is_connected:
+#             try:
+#                 data = client.socket.recv(1024).decode("utf-8")
+#                 if not data:
+#                     self.disconnect_client(client)
+#                     break
+                
+#                 # Processa os comandos recebidos do cliente
+#                 if data.startswith('<-CONNECTION_REQUEST->'):
+#                     source_client_id = data.split('<->')[1]
+#                     self.process_connection_request(client, source_client_id)
+                
+#                 elif data.startswith('<-CONFIRM_CONNECTION->'):
+#                     target_client_id = data.split('<->')[1]
+#                     self.process_connection_confirmation(client, target_client_id)
+
+#                 # Implemente outras lógicas de processamento de comandos aqui
+
+#             except Exception as e:
+#                 print(f"Erro ao lidar com o cliente {client.id}: {e}")
+#                 self.disconnect_client(client)
+#                 break
+
+#     def process_connection_request(self, source_client, target_client_id):
+#         target_client = self.clients.get(target_client_id)
+#         if target_client:
+#             target_client.socket.send(f"<-CONNECTION_REQUEST->{source_client.id}".encode("utf-8"))
+
+#     def process_connection_confirmation(self, source_client, target_client_id):
+#         target_client = self.clients.get(target_client_id)
+#         if target_client:
+#             target_client.socket.send(f"<-CONNECTION_CONFIRMED->{source_client.id}".encode("utf-8"))
+
+#     def disconnect_client(self, client):
+#         client.is_connected = False
+#         client.socket.close()
+#         del self.clients[client.id]
+#         print(f"Cliente {client.id} desconectado.")
+
+#     def generate_client_id(self):
+#         return ''.join(random.choice('0123456789ABCDEF') for _ in range(8))
+     
+#     def generate_random_port(self):
+#         return random.randint(10000, 65535)
+    
+# if __name__ == "__main__":
+#     server = Server("127.0.0.1", 6651)
+#     server.start()
 
 if __name__ == "__main__":  
     server = Server()
     server.start()
+
